@@ -8,10 +8,17 @@ Usage:
     python run_server.py --host 0.0.0.0 --port 8000
     python run_server.py --reload
 """
+import os
+import sys
+
+# Force unbuffered output for cloud deployments
+os.environ['PYTHONUNBUFFERED'] = '1'
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
+
 import uvicorn
 import argparse
 from pathlib import Path
-import sys
 import platform
 import subprocess
 import time
@@ -81,6 +88,10 @@ def kill_process_on_port(port):
 if __name__ == "__main__":
     import os
     
+    # Get port from environment (Render sets this automatically)
+    port_from_env = os.getenv("PORT")
+    print(f"DEBUG: PORT environment variable = {port_from_env}", flush=True)
+    
     parser = argparse.ArgumentParser(description="Start Collabry AI Core FastAPI server")
     parser.add_argument(
         "--host",
@@ -90,7 +101,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--port",
         type=int,
-        default=int(os.getenv("PORT", "8000")),
+        default=int(port_from_env) if port_from_env else 8000,
         help="Port to bind (default: PORT env var or 8000)"
     )
     parser.add_argument(
@@ -107,26 +118,43 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    # Kill any existing process on the port (only on local dev, not on Render)
-    if os.getenv("RENDER") != "true":
+    # Kill any existing process on the port (only on local dev, not on cloud platforms)
+    is_production = os.getenv("RENDER") == "true" or os.getenv("RENDER_SERVICE_NAME") or os.getenv("RAILWAY_ENVIRONMENT")
+    if not is_production:
         print(f"🔍 Checking port {args.port}...", flush=True)
         kill_process_on_port(args.port)
     
     print("=" * 60, flush=True)
     print("🚀 Starting Collabry AI Core FastAPI Server", flush=True)
     print("=" * 60, flush=True)
-    print(f"Environment: {'Render' if os.getenv('RENDER') else 'Local'}", flush=True)
+    env_type = "Production (Render)" if os.getenv("RENDER_SERVICE_NAME") else ("Production (Railway)" if os.getenv("RAILWAY_ENVIRONMENT") else "Local")
+    print(f"Environment: {env_type}", flush=True)
     print(f"Host: {args.host}", flush=True)
     print(f"Port: {args.port}", flush=True)
     print(f"Reload: {args.reload}", flush=True)
     print(f"Docs: http://{args.host}:{args.port}/docs", flush=True)
     print(f"Health: http://{args.host}:{args.port}/health", flush=True)
     print("=" * 60, flush=True)
-    print(f"Binding to {args.host}:{args.port}...", flush=True)
+    print(f"🔌 Attempting to bind to {args.host}:{args.port}...", flush=True)
+    
+    # Verify app can be imported before starting uvicorn
+    try:
+        print(f"📦 Importing FastAPI application...", flush=True)
+        from server.main import app
+        print(f"✓ Application imported successfully", flush=True)
+    except Exception as e:
+        print(f"❌ Failed to import application: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+    
+    sys.stdout.flush()
+    sys.stderr.flush()
     
     try:
+        print(f"📡 Starting uvicorn server...", flush=True)
         uvicorn.run(
-            "server.main:app",
+            app,  # Use imported app instead of string to avoid import issues
             host=args.host,
             port=args.port,
             reload=args.reload,
