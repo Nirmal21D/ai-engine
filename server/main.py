@@ -39,27 +39,34 @@ async def lifespan(app: FastAPI):
     Startup and shutdown events.
     """
     # Startup
+    import os
+    is_serverless = os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME")
+    
     logger.info("🚀 Starting Collabry AI Core Server")
-    logger.info(f"MongoDB: {CONFIG['mongo_uri']}")
+    logger.info(f"Environment: {'Serverless' if is_serverless else 'Traditional'}")
+    logger.info(f"MongoDB: {CONFIG['mongo_uri'][:50]}...")
     logger.info(f"Ollama: {CONFIG['ollama_host']}")
     logger.info(f"JWT Algorithm: {CONFIG['jwt_algorithm']}")
     
-    # Verify critical services
-    try:
-        from pymongo import MongoClient
-        client = MongoClient(CONFIG["mongo_uri"], serverSelectionTimeoutMS=5000)
-        client.server_info()
-        logger.info("✓ MongoDB connection verified")
-        client.close()
-    except Exception as e:
-        logger.error(f"✗ MongoDB connection failed: {e}")
-        logger.warning("Server will start but database operations may fail")
+    # Skip connection verification in serverless environments (connections are lazy)
+    if not is_serverless:
+        # Verify critical services
+        try:
+            from pymongo import MongoClient
+            client = MongoClient(CONFIG["mongo_uri"], serverSelectionTimeoutMS=5000)
+            client.server_info()
+            logger.info("✓ MongoDB connection verified")
+            client.close()
+        except Exception as e:
+            logger.error(f"✗ MongoDB connection failed: {e}")
+            logger.warning("Server will start but database operations may fail")
+    else:
+        logger.info("⏭ Skipping startup checks (serverless mode)")
     
     yield
     
     # Shutdown
     logger.info("Shutting down Collabry AI Core Server")
-
 
 # Create FastAPI app
 app = FastAPI(
