@@ -107,24 +107,35 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    # Kill any existing process on the port
-    print(f"🔍 Checking port {args.port}...")
-    kill_process_on_port(args.port)
+    # Kill any existing process on the port (only on local dev, not on Render)
+    if os.getenv("RENDER") != "true":
+        print(f"🔍 Checking port {args.port}...", flush=True)
+        kill_process_on_port(args.port)
     
-    print("=" * 60)
-    print("🚀 Starting Collabry AI Core FastAPI Server")
-    print("=" * 60)
-    print(f"Host: {args.host}")
-    print(f"Port: {args.port}")
-    print(f"Reload: {args.reload}")
-    print(f"Docs: http://{args.host}:{args.port}/docs")
-    print(f"Health: http://{args.host}:{args.port}/health")
-    print("=" * 60)
+    print("=" * 60, flush=True)
+    print("🚀 Starting Collabry AI Core FastAPI Server", flush=True)
+    print("=" * 60, flush=True)
+    print(f"Environment: {'Render' if os.getenv('RENDER') else 'Local'}", flush=True)
+    print(f"Host: {args.host}", flush=True)
+    print(f"Port: {args.port}", flush=True)
+    print(f"Reload: {args.reload}", flush=True)
+    print(f"Docs: http://{args.host}:{args.port}/docs", flush=True)
+    print(f"Health: http://{args.host}:{args.port}/health", flush=True)
+    print("=" * 60, flush=True)
+    print(f"Binding to {args.host}:{args.port}...", flush=True)
     
-    uvicorn.run(
-        "server.main:app",
-        host=args.host,
-        port=args.port,
-        reload=args.reload,
-        log_level=args.log_level
-    )
+    try:
+        uvicorn.run(
+            "server.main:app",
+            host=args.host,
+            port=args.port,
+            reload=args.reload,
+            log_level=args.log_level,
+            access_log=True,
+            timeout_keep_alive=30
+        )
+    except Exception as e:
+        print(f"❌ Failed to start server: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
