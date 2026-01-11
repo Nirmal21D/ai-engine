@@ -79,6 +79,8 @@ def kill_process_on_port(port):
 
 
 if __name__ == "__main__":
+    import os
+    
     parser = argparse.ArgumentParser(description="Start Collabry AI Core FastAPI server")
     parser.add_argument(
         "--host",
@@ -88,8 +90,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--port",
         type=int,
-        default=8000,
-        help="Port to bind (default: 8000)"
+        default=int(os.getenv("PORT", "8000")),
+        help="Port to bind (default: PORT env var or 8000)"
     )
     parser.add_argument(
         "--reload",
