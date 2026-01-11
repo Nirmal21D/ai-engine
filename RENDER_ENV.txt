@@ -1,0 +1,50 @@
+# Render Environment Variables Configuration
+# Copy these to your Render service's Environment Variables section
+# Go to: Dashboard > Your Service > Environment > Add Environment Variable
+
+# ==============================================================================
+# CRITICAL: Set these in Render Dashboard
+# ==============================================================================
+
+# MongoDB connection (REQUIRED)
+MONGO_URI=mongodb+srv://nirmal:nirmal21@cluster0.sunt7fe.mongodb.net/collabry?retryWrites=true&w=majority
+MONGO_DB=collabry
+MEMORY_COLLECTION=conversations
+
+# Ollama API endpoint (REQUIRED)
+OLLAMA_BASE_URL=https://libby-tornadic-josphine.ngrok-free.dev
+OLLAMA_MODEL=llama3.2
+OLLAMA_TIMEOUT=180
+OLLAMA_MAX_RETRIES=3
+OLLAMA_RETRY_DELAY=1.0
+
+# JWT Authentication (REQUIRED - must match your backend)
+JWT_SECRET_KEY=98ad697a3091d45ebfecdf4adf429d6f7fd7d3b99b2813951132ce35fc12c93d08bd700e6ab679a3c635d022a08cc26adbf352903f6d3435d2d5b288fe5b40c9
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION=86400
+
+# CORS Configuration (REQUIRED)
+CORS_ORIGINS=http://localhost:3000,http://localhost:5000,http://127.0.0.1:3000,http://127.0.0.1:5000,https://libby-tornadic-josphine.ngrok-free.dev,https://ai-engine-1i5x.onrender.com
+
+# Temperature for LLM responses
+COLLABRY_TEMPERATURE=0.2
+
+# RAG & Embeddings
+COLLABRY_EMBEDDING_MODEL=all-MiniLM-L6-v2
+COLLABRY_RETRIEVAL_TOP_K=3
+COLLABRY_FAISS_CHECKPOINT_INTERVAL=60
+
+# Memory Management
+COLLABRY_MEMORY_CACHE_SIZE=128
+COLLABRY_MEMORY_TTL_SECONDS=604800
+COLLABRY_MEMORY_MAX_ITEMS=5000
+COLLABRY_MEMORY_EVICTION_POLICY=hybrid
+COLLABRY_MEMORY_PRUNE_INTERVAL_SECONDS=3600
+
+# Optional: External APIs
+SERPER_API_KEY=
+STABLE_DIFFUSION_API=
+
+# ==============================================================================
+# NOTE: PORT is automatically set by Render - DO NOT set it manually
+# ==============================================================================
